@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 import plotly.express as px
+import streamlit_shadcn_ui as ui
 
 class Tamago:
 
@@ -31,6 +32,7 @@ class Tamago:
             self.process()
             self.export()
             self.filter()
+            self.summary()
             self.dashboard()
         else:
             self.ui.warning("Please upload a file!")
@@ -74,15 +76,15 @@ class Tamago:
             self.ui.dataframe(self.df)
 
     def filter(self):
-        self.ui.subheader("Filter your records")
-        self.ui.write("Filters")
+        self.ui.sidebar.subheader("Filter your records")
+        self.ui.sidebar.write("Filters")
         #from date range
-        self.start_date = self.ui.date_input("From Date", self.df['Date'].min())
+        self.start_date = self.ui.sidebar.date_input("From Date", self.df['Date'].min())
         #to date range
-        self.end_date = self.ui.date_input("To Date", self.df['Date'].max())
+        self.end_date = self.ui.sidebar.date_input("To Date", self.df['Date'].max())
 
         #transaction type
-        self.transaction_type = self.ui.multiselect("Transaction Type", self.df["Transaction Type"].unique(), default=self.df["Transaction Type"].unique().tolist())
+        self.transaction_type = self.ui.sidebar.multiselect("Transaction Type", self.df["Transaction Type"].unique(), default=self.df["Transaction Type"].unique().tolist())
 
         #filter the data
         self.filtered_df = self.df[(self.df['Date'] >= self.start_date.strftime("%Y-%m-%d")) & (self.df['Date'] <= self.end_date.strftime("%Y-%m-%d"))]
@@ -90,6 +92,17 @@ class Tamago:
 
         self.ui.subheader("Your filtered records")
         self.ui.dataframe(self.filtered_df)
+
+    def summary(self):
+        self.ui.subheader("Summary")
+        cols = st.columns(3)
+        with cols[0]:
+            ui.metric_card(title="Total Amount (RM)", content=str(self.filtered_df['Amount (RM)'].sum()), key="card1")
+        with cols[1]:
+            ui.metric_card(title="Total Transactions", content=self.filtered_df.shape[0], key="card2")
+        with cols[2]:
+            ui.metric_card(title="Total Days", content=self.filtered_df['Date'].nunique(), key="card3")
+            
 
     def dashboard(self):
         self.ui.subheader("Dashboard")
