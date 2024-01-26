@@ -52,6 +52,9 @@ class Tamago:
             self.df = self.df[self.df['Transaction Type'] != "Reload"]
             self.df = self.df[self.df['Transaction Type'] != "Receive from Wallet"]
 
+            #Rename Transaction Type DuitNow QR TNGD to DuitNow QR
+            self.df['Transaction Type'] = self.df['Transaction Type'].str.replace('DuitNow QR TNGD', 'DuitNow QR', regex=False)
+
             #transform the data in column "Date" to datetime format
             self.df['Date'] = pd.to_datetime(self.df['Date'], format ='mixed', dayfirst=True,)
 
@@ -102,7 +105,13 @@ class Tamago:
             ui.metric_card(title="Total Transactions", content=self.filtered_df.shape[0], key="card2")
         with cols[2]:
             ui.metric_card(title="Total Days", content=self.filtered_df['Date'].nunique(), key="card3")
-            
+
+        #breakdown to each transaction type
+        cols = st.columns(3)
+        for i in range(len(self.filtered_df['Transaction Type'].unique())):
+            with cols[i]:
+                ui.metric_card(title=self.filtered_df['Transaction Type'].unique()[i], content=self.filtered_df[self.filtered_df['Transaction Type'] == self.filtered_df['Transaction Type'].unique()[i]].shape[0], key="card4_{}".format(i))
+
 
     def dashboard(self):
         self.ui.subheader("Dashboard")
