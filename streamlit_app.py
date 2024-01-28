@@ -46,7 +46,10 @@ class Tamago:
     def process(self):
         with self.ui.spinner("Processing your records..."):
             self.df = tabula.read_pdf(self.file, pages = "all", multiple_tables=False)[0]
-            self.df = self.df.iloc[0:self.df[self.df.Date == 'Date'].index[0]]
+            try:
+                self.df = self.df.iloc[0:self.df[self.df.Date == 'Date'].index[0]]
+            except:
+                pass
             raw_df = self.df
             self.df.drop(['Status', "Wallet Balanc", "Details", "Reference"], axis=1, inplace=True)
             #filter out the Transaction Type with "Reload"
