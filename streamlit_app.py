@@ -46,11 +46,13 @@ class Tamago:
     def process(self):
         with self.ui.spinner("Processing your records..."):
             self.df = tabula.read_pdf(self.file, pages = "all", multiple_tables=False)[0]
+            self.df = self.df.iloc[0:self.df[self.df.Date == 'Date'].index[0]]
             raw_df = self.df
             self.df.drop(['Status', "Wallet Balanc", "Details", "Reference"], axis=1, inplace=True)
             #filter out the Transaction Type with "Reload"
             self.df = self.df[self.df['Transaction Type'] != "Reload"]
             self.df = self.df[self.df['Transaction Type'] != "Receive from Wallet"]
+            self.df['Transaction Type'] = self.df['Transaction Type'].str.replace('DUITNOW_TRANS\rFERTO', 'DuitNow Transfer', regex=False)
 
             #Rename Transaction Type DuitNow QR TNGD to DuitNow QR
             self.df['Transaction Type'] = self.df['Transaction Type'].str.replace('DuitNow QR TNGD', 'DuitNow QR', regex=False)
@@ -106,12 +108,26 @@ class Tamago:
         with cols[2]:
             ui.metric_card(title="Total Days", content=self.filtered_df['Date'].nunique(), key="card3")
 
+        self.ui.subheader("Transaction Type Insights")
         #breakdown to each transaction type
         column_count = len(self.filtered_df['Transaction Type'].unique())
-        cols = st.columns(column_count)
-        for i in range(column_count):
-            with cols[i]:
-                ui.metric_card(title=self.filtered_df['Transaction Type'].unique()[i], content=self.filtered_df[self.filtered_df['Transaction Type'] == self.filtered_df['Transaction Type'].unique()[i]].shape[0], key="card4_{}".format(i))
+        # if column_count > 3, break into multiple rows
+        if column_count > 3:
+            column_count = 3
+            row_count = len(self.filtered_df['Transaction Type'].unique()) // 3
+            if len(self.filtered_df['Transaction Type'].unique()) % 3 != 0:
+                row_count += 1
+            cols = st.columns(column_count)
+            for i in range(row_count):
+                for j in range(column_count):
+                    with cols[j]:
+                        if i * column_count + j < len(self.filtered_df['Transaction Type'].unique()):
+                            ui.metric_card(title=self.filtered_df['Transaction Type'].unique()[i * column_count + j], content=self.filtered_df[self.filtered_df['Transaction Type'] == self.filtered_df['Transaction Type'].unique()[i * column_count + j]].shape[0], key="card4_{}".format(i * column_count + j))
+
+        # cols = st.columns(column_count)
+        # for i in range(column_count):
+        #     with cols[i]:
+        #         ui.metric_card(title=self.filtered_df['Transaction Type'].unique()[i], content=self.filtered_df[self.filtered_df['Transaction Type'] == self.filtered_df['Transaction Type'].unique()[i]].shape[0], key="card4_{}".format(i))
 
 
     def dashboard(self):
