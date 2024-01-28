@@ -107,8 +107,9 @@ class Tamago:
             ui.metric_card(title="Total Days", content=self.filtered_df['Date'].nunique(), key="card3")
 
         #breakdown to each transaction type
-        cols = st.columns(3)
-        for i in range(len(self.filtered_df['Transaction Type'].unique())):
+        column_count = len(self.filtered_df['Transaction Type'].unique())
+        cols = st.columns(column_count)
+        for i in range(column_count):
             with cols[i]:
                 ui.metric_card(title=self.filtered_df['Transaction Type'].unique()[i], content=self.filtered_df[self.filtered_df['Transaction Type'] == self.filtered_df['Transaction Type'].unique()[i]].shape[0], key="card4_{}".format(i))
 
